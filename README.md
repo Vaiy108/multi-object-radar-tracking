@@ -208,6 +208,27 @@ Planned next step:
 
 ---
 
+## JPDA Weighted Update
+
+The tracker was extended from JPDA validation-only analysis to a practical JPDA-style weighted measurement update.
+
+When multiple detections fall inside a track gate, the measurement update uses a probability-weighted measurement instead of a single hard GNN assignment.
+
+Example:
+
+```text
+JPDA weighted update at step 51, track 1, 2 detections
+Detection 0 Probability=0.879
+Detection 1 Probability=0.121
+```
+### Example JPDA Weighted Update Output
+
+<p align="center">
+<img src="outputs/jpda_weighted.png" width="450"/>
+</p>
+
+---
+
 ## Run
 
 ```bash

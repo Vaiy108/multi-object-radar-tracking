@@ -5,6 +5,7 @@ from scipy.optimize import linear_sum_assignment
 
 from .models import RadarDetection
 from .kalman import ConstantVelocityKalmanFilter
+from .jpda import association_probabilities, weighted_measurement
 
 class TrackState(str, Enum):
     TENTATIVE = "tentative"
@@ -66,9 +67,22 @@ class MultiObjectTracker:
         # 3. Update matched tracks - Kalman update
         for track_idx, det_idx in matches:
             trk = self.tracks[track_idx]
-            z = det_positions[det_idx]
+
+            weights = self.jpda_weights.get(track_idx, [])
+
+            if len(weights) > 1:
+                z = weighted_measurement(det_positions, weights)
+                print(
+                    f"JPDA weighted update at step {current_step}, "
+                    f"track {trk.track_id}, "
+                    f"{len(weights)} detections"
+                )
+            else:
+                z = det_positions[det_idx]
+
             trk.x, trk.P = self.kf.update(trk.x, trk.P, z)
-            trk.hits += 1 #Track Management
+
+            trk.hits += 1
             trk.misses = 0
             trk.history.append(trk.position())
 
@@ -151,7 +165,7 @@ class MultiObjectTracker:
 
         
         # JPDA probability calculation
-        from .jpda import association_probabilities
+        # from .jpda import association_probabilities
 
         self.jpda_weights = {}
 
