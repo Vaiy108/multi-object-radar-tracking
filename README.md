@@ -107,13 +107,17 @@ Mahalanobis Gating
       ↓
 GNN / JPDA Data association
       ↓
-Kalman Measurement Update    
+Kalman Measurement / JPDA weighted Update    
 	  ↓
 Bernoulli Existence Estimation
       ↓ 
-Track Management
+Radar Track Management
       ↓
-Confirmed Object Tracks
+Synthetic Camera Detection Generation
+      ↓
+Radar-Camera Association
+      ↓
+Fused Object List
 
 ```
 
@@ -262,6 +266,51 @@ Track 265: existence=0.50, hits=1, misses=0
 In this example, Tracks 78 and 164 represent stable high-confidence targets, while Tracks 264 and 265 are low-confidence tentative tracks likely caused by clutter or short-lived detections.
 
 This is not a full Random Finite Set Bernoulli filter, but it demonstrates the core idea of maintaining both track state and target-existence confidence.
+
+---
+
+## Lightweight Radar-Camera Fusion
+
+The project was extended with a lightweight radar-camera fusion layer.
+
+The radar tracker provides:
+
+- Track ID
+- Position
+- Velocity
+- Existence probability
+
+A synthetic camera sensor provides:
+
+- Object bearing / azimuth
+- Class label
+- Classification confidence
+
+Fusion is performed by comparing the predicted radar-track azimuth with the camera-detection azimuth. If the angular difference is below a configurable gate, the camera class label and confidence are attached to the radar track.
+
+This demonstrates a practical radar-camera fusion concept without requiring a physical camera or video input.
+
+Example fused output:
+
+```text
+Final Fused Object List:
+
+Track 78: pos=(109.37, -0.35) m, vel=(6.05, -0.01) m/s, existence=0.99, class=car, class_conf=0.95
+Track 164: pos=(17.49, 4.92) m, vel=(1.61, 1.00) m/s, existence=0.99, class=bicycle, class_conf=0.80
+```
+### Example radar-camera fusion Output
+<p align="center">
+<img src="outputs/radar_camera_fusion.png" width="450"/>
+</p>
+
+This shows how radar contributes accurate position/velocity tracking, while the camera contributes semantic object classification.
+
+#### Current implementation:
+
+- Synthetic camera detection generation
+- Camera azimuth noise and missed detections
+- Radar-track to camera-detection association
+- Fused object-list generation
 
 ## Run
 
