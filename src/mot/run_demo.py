@@ -114,6 +114,16 @@ def main():
     print(f"Confirmed tracks: {num_confirmed_tracks}")
     print(f"False confirmed tracks: {false_confirmed_tracks}")
 
+    print("\nFinal Track Existence Probabilities:")
+
+    for trk in tracker.tracks:
+        print(
+            f"Track {trk.track_id}: "
+            f"existence={trk.existence_probability:.2f}, "
+            f"hits={trk.hits}, "
+            f"misses={trk.misses}"
+        )
+
     # print("\nJPDA Validation Sets:")
 
     # for track_idx, dets in tracker.jpda_weights.items():

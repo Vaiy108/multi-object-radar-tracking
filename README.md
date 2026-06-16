@@ -105,10 +105,12 @@ Kalman prediction
       ↓
 Mahalanobis Gating
       ↓
-GNN Data association
+GNN / JPDA Data association
       ↓
-Kalman Measurement Update 
-	  ↓     
+Kalman Measurement Update    
+	  ↓
+Bernoulli Existence Estimation
+      ↓ 
 Track Management
       ↓
 Confirmed Object Tracks
@@ -229,6 +231,38 @@ Detection 1 Probability=0.121
 
 ---
 
+## Bernoulli-Style Existence Probability
+
+The tracker was extended with a lightweight Bernoulli-inspired existence probability for each track.
+
+Instead of relying only on hit/miss counters, each track maintains an existence confidence:
+
+- Matched detection → existence probability increases
+- Missed detection → existence probability decreases
+- Low existence probability → track deletion candidate
+
+This helps distinguish stable real targets from clutter-generated tentative tracks.
+
+Example output:
+
+```text
+Final Track Existence Probabilities:
+
+Track 78: existence=0.99, hits=171, misses=0
+Track 164: existence=0.99, hits=93, misses=0
+Track 264: existence=0.30, hits=1, misses=1
+Track 265: existence=0.50, hits=1, misses=0
+```
+### Example Bernoulli-style existence probability Output
+<p align="center">
+<img src="outputs/bernoulli_estimation.png" width="450"/>
+</p>
+
+
+In this example, Tracks 78 and 164 represent stable high-confidence targets, while Tracks 264 and 265 are low-confidence tentative tracks likely caused by clutter or short-lived detections.
+
+This is not a full Random Finite Set Bernoulli filter, but it demonstrates the core idea of maintaining both track state and target-existence confidence.
+
 ## Run
 
 ```bash
@@ -237,9 +271,6 @@ python -m src.mot.run_demo
 
 ## Planned Extensions
 
-- Complete JPDA weighted Kalman update
-- Joint association hypothesis management
-- Bernoulli / Random Finite Set tracking
 - Radar-camera fusion
 - Embedded C implementation
 

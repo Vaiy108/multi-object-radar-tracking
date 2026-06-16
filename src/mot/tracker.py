@@ -21,6 +21,7 @@ class Track:
     hits: int = 1
     misses: int = 0
     age: int = 1
+    existence_probability: float = 0.5
     history: list[np.ndarray] = field(default_factory=list)
     confirmed_at_step: int | None = None
 
@@ -42,6 +43,7 @@ class MultiObjectTracker:
         gate_threshold: float = 9.21,
         confirm_hits: int = 3,
         delete_misses: int = 5,
+        existence_probability: float = 0.6,
     ) -> None:
         self.kf = ConstantVelocityKalmanFilter(dt, process_noise_std)
         self.gate_threshold = gate_threshold
@@ -84,6 +86,8 @@ class MultiObjectTracker:
 
             trk.hits += 1
             trk.misses = 0
+            trk.existence_probability = min(0.99, trk.existence_probability + 0.10)
+
             trk.history.append(trk.position())
 
             if trk.state == TrackState.TENTATIVE and trk.hits >= self.confirm_hits:
@@ -99,8 +103,13 @@ class MultiObjectTracker:
         for track_idx in unmatched_tracks:
             trk = self.tracks[track_idx]
             trk.misses += 1  #Track Management
+            trk.existence_probability = max(0.01, trk.existence_probability - 0.20)
+
             trk.history.append(trk.position())
-            if trk.misses >= self.delete_misses:
+            if (
+                trk.misses >= self.delete_misses
+                or trk.existence_probability < 0.2
+            ):
                 trk.state = TrackState.DELETED
 
         # 5. Create new tracks for unmatched detections
