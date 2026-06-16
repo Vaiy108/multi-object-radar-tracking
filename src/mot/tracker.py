@@ -49,6 +49,8 @@ class MultiObjectTracker:
         self.tracks: list[Track] = []
         self.next_track_id = 1
         self.confirmed_track_log = {}
+        self.validation_sets = {}
+        self.jpda_weights = {}
 
     def step(self, detections: list[RadarDetection], current_step: int) -> list[Track]:
         # 1. Predict all tracks
@@ -98,6 +100,9 @@ class MultiObjectTracker:
         return self.tracks
 
     def _associate(self, det_positions: list[np.ndarray]):
+
+        self.validation_sets = {}
+        self.jpda_weights = {}
         active_indices = [i for i, t in enumerate(self.tracks) if t.state != TrackState.DELETED]
 
         if not active_indices:
@@ -114,8 +119,19 @@ class MultiObjectTracker:
             trk = self.tracks[track_idx]
             for col, z in enumerate(det_positions):
                 d2 = self.kf.innovation_distance(trk.x, trk.P, z) # Gating
+                if not hasattr(self, "validation_sets"):
+                    self.validation_sets = {}
+
+                self.validation_sets.setdefault(track_idx, [])
+
                 if d2 <= self.gate_threshold:
                     cost[row, col] = d2
+                    self.validation_sets[track_idx].append(
+                        {
+                            "det_idx": col,
+                            "distance": d2,
+                        }
+                    )
 
         rows, cols = linear_sum_assignment(cost) #Hungarian algorithm /Assignment
 
@@ -133,7 +149,38 @@ class MultiObjectTracker:
         unmatched_tracks = [i for i in active_indices if i not in matched_track_indices]
         unmatched_dets = [j for j in range(len(det_positions)) if j not in matched_det_indices]
 
+        
+        # JPDA probability calculation
+        from .jpda import association_probabilities
+
+        self.jpda_weights = {}
+
+        for track_idx, detections in self.validation_sets.items():
+
+            distances = [
+                d["distance"]
+                for d in detections
+            ]
+
+            probs = association_probabilities(
+                distances
+            )
+
+            self.jpda_weights[track_idx] = []
+
+            for det, prob in zip(detections, probs):
+
+                self.jpda_weights[track_idx].append(
+                    {
+                        "det_idx": det["det_idx"],
+                        "probability": prob,
+                    }
+                )
+
         return matches, unmatched_tracks, unmatched_dets
+
+        
+
 
     def _create_track(self, z: np.ndarray) -> None:
         x0 = np.array([z[0], z[1], 0.0, 0.0], dtype=float)

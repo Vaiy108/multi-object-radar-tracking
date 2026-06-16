@@ -162,7 +162,51 @@ Confirmed Object Tracks
 </p>
 
 --- 
+## JPDA Validation and Ambiguous Association Analysis
 
+To investigate limitations of Global Nearest Neighbor (GNN) association, the tracker was extended with JPDA-style validation gates and probabilistic association analysis.
+
+For each predicted track:
+
+1. Mahalanobis validation gates are computed
+2. All detections inside the gate are retained
+3. Association likelihoods are computed from Mahalanobis distances
+4. Normalized association probabilities are generated
+
+This allows the tracker to identify ambiguous target-detection assignments, particularly during target crossing and clutter-rich scenarios.
+
+Example output:
+
+```text
+Ambiguous JPDA gate at step 51, track index 0
+
+Detection 0 Probability = 0.879
+Detection 1 Probability = 0.121
+
+Ambiguous JPDA gate at step 80, track index 1
+
+Detection 0 Probability = 0.957
+Detection 2 Probability = 0.043
+```
+These results demonstrate that multiple measurements can simultaneously satisfy a track's validation gate and motivate probabilistic association methods such as Joint Probabilistic Data Association (JPDA).
+
+Current implementation:
+
+- Validation gate generation
+- Association likelihood computation
+- Association probability normalization
+
+Planned next step:
+
+- Full JPDA weighted Kalman update
+
+### Example JPDA Validation Output
+
+<p align="center">
+<img src="outputs/jpda_validation.png" width="450"/>
+</p>
+
+---
 
 ## Run
 
@@ -172,12 +216,11 @@ python -m src.mot.run_demo
 
 ## Planned Extensions
 
-- JPDA data association
-- Bernoulli existence probability
+- Complete JPDA weighted Kalman update
+- Joint association hypothesis management
+- Bernoulli / Random Finite Set tracking
 - Radar-camera fusion
-- Extended Object Tracking
-- C implementation of the tracking core
-- Real radar log replay support/interface
+- Embedded C implementation
 
 ---
 

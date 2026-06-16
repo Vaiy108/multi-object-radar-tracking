@@ -10,8 +10,10 @@ def create_intersection_scenario() -> list[ObjectState]:
     """
     #ground truth
     return [
-        ObjectState(x=-60.0, y=10.0, vx=8.0, vy=0.0, object_id=1, label="car"),
-        ObjectState(x=45.0, y=-35.0, vx=-5.0, vy=4.0, object_id=2, label="car"),
+        # ObjectState(x=-60.0, y=10.0, vx=8.0, vy=0.0, object_id=1, label="car"),
+        # ObjectState(x=45.0, y=-35.0, vx=-5.0, vy=4.0, object_id=2, label="car"),
+        ObjectState(x=-40.0, y=0.0, vx=6.0, vy=0.0, object_id=1,  label="car"),
+        ObjectState(x=40.0, y=0.0, vx=-6.0, vy=0.0, object_id=2, label="car"),
         ObjectState(x=-20.0, y=-20.0, vx=1.5, vy=1.0, object_id=3, label="bicycle"),
         ObjectState(x=10.0, y=60.0, vx=0.0, vy=-6.0, object_id=4, label="truck"),
     ]

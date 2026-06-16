@@ -23,7 +23,8 @@ def main():
     tracker = MultiObjectTracker(
         dt=dt,
         process_noise_std=0.8,
-        gate_threshold=5.99,
+        #gate_threshold=5.99,
+        gate_threshold=30.0,
         confirm_hits=5,
         delete_misses=3,
     )
@@ -37,6 +38,15 @@ def main():
 
         detections = radar.measure(objects)
         tracks = tracker.step(detections, step)
+        for track_idx, weights in getattr(tracker, "jpda_weights", {}).items():
+            if len(weights) > 1:
+                print(f"\nAmbiguous JPDA gate at step {step}, track index {track_idx}")
+
+                for w in weights:
+                    print(
+                        f"  Detection {w['det_idx']} "
+                        f"Probability={w['probability']:.3f}"
+                    )
 
         for trk in tracks:
             if trk.state == TrackState.CONFIRMED:
@@ -69,21 +79,21 @@ def main():
     #     else:
     #         print(f"Truth {truth_id}: no matched track")
 
-    manual_matches = {
-        1: 91,
-        2: 1,
-        3: 158,
-        4: 79,
-    }
+    # manual_matches = {
+    #     1: 91,
+    #     2: 1,
+    #     3: 158,
+    #     4: 79,
+    # }
 
-    print("\nTime-aligned manual RMSE summary:")
+    # print("\nTime-aligned manual RMSE summary:")
 
-    for truth_id, track_id in manual_matches.items():
-        rmse = compute_rmse_time_aligned(
-            truth_history[truth_id],
-            track_history[track_id]
-        )
-        print(f"Truth {truth_id} matched to Track {track_id}: RMSE = {rmse:.2f} m")
+    # for truth_id, track_id in manual_matches.items():
+    #     rmse = compute_rmse_time_aligned(
+    #         truth_history[truth_id],
+    #         track_history[track_id]
+    #     )
+    #     print(f"Truth {truth_id} matched to Track {track_id}: RMSE = {rmse:.2f} m")
 
 
     print("\nConfirmed track summary:")
@@ -103,6 +113,19 @@ def main():
     print(f"Expected true objects: {expected_true_tracks}")
     print(f"Confirmed tracks: {num_confirmed_tracks}")
     print(f"False confirmed tracks: {false_confirmed_tracks}")
+
+    # print("\nJPDA Validation Sets:")
+
+    # for track_idx, dets in tracker.jpda_weights.items():
+
+    #     print(f"\nTrack {track_idx}")
+
+    #     for det in dets:
+
+    #         print(
+    #             f"Detection {det['det_idx']} "
+    #             f"Probability={det['probability']:.3f}"
+    #         )
 
 if __name__ == "__main__":
     main()
