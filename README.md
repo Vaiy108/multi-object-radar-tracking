@@ -300,7 +300,7 @@ Track 164: pos=(17.49, 4.92) m, vel=(1.61, 1.00) m/s, existence=0.99, class=bicy
 ```
 ### Example radar-camera fusion Output
 <p align="center">
-<img src="outputs/radar_camera_fusion.png" width="450"/>
+<img src="outputs/radar-camera_fusion.png" width="450"/>
 </p>
 
 This shows how radar contributes accurate position/velocity tracking, while the camera contributes semantic object classification.
