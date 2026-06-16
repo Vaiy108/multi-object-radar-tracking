@@ -5,6 +5,9 @@ from .tracker import MultiObjectTracker, TrackState
 from .visualization import plot_scene
 from .metrics import compute_rmse_time_aligned
 
+from .camera import CameraSensor
+from .fusion import associate_camera_to_radar_tracks
+
 def main():
     dt = 0.1
     num_steps = 250
@@ -18,6 +21,12 @@ def main():
         detection_probability=0.95,
         clutter_rate=1,
         seed=7,
+    )
+
+    camera = CameraSensor(
+        azimuth_std_rad=0.015,
+        detection_probability=0.9,
+        seed=11,
     )
 
     tracker = MultiObjectTracker(
@@ -38,6 +47,13 @@ def main():
 
         detections = radar.measure(objects)
         tracks = tracker.step(detections, step)
+        camera_detections = camera.measure(objects)
+
+        fused_objects = associate_camera_to_radar_tracks(
+            tracks,
+            camera_detections,
+            azimuth_gate_rad=0.08,
+        )
         for track_idx, weights in getattr(tracker, "jpda_weights", {}).items():
             if len(weights) > 1:
                 print(f"\nAmbiguous JPDA gate at step {step}, track index {track_idx}")
@@ -122,6 +138,21 @@ def main():
             f"existence={trk.existence_probability:.2f}, "
             f"hits={trk.hits}, "
             f"misses={trk.misses}"
+        )
+
+    print("\nFinal Fused Object List:")
+
+    for obj in fused_objects:
+        pos = obj["position"]
+        vel = obj["velocity"]
+
+        print(
+            f"Track {obj['track_id']}: "
+            f"pos=({pos[0]:.2f}, {pos[1]:.2f}) m, "
+            f"vel=({vel[0]:.2f}, {vel[1]:.2f}) m/s, "
+            f"existence={obj['existence_probability']:.2f}, "
+            f"class={obj['class_label']}, "
+            f"class_conf={obj['class_confidence']:.2f}"
         )
 
     # print("\nJPDA Validation Sets:")

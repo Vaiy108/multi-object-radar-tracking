@@ -22,8 +22,11 @@ class Track:
     misses: int = 0
     age: int = 1
     existence_probability: float = 0.5
+    class_label: str | None = None
+    class_confidence: float = 0.0
     history: list[np.ndarray] = field(default_factory=list)
     confirmed_at_step: int | None = None
+    
 
     def position(self) -> np.ndarray:
         return self.x[:2].copy()
